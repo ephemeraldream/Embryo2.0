@@ -22,7 +22,7 @@ def train(cfg:ExperimentConfig) -> None:
         ModelCheckpoint(save_top_k=3, monitor='valid_f1', mode='max',every_n_epochs=1)
     ]
     model = EmbryoLightningModule(cfg=cfg.module_config)
-
+    # TODO : Something is wrong with callbacks
     trainer = Trainer(
         **dict(cfg.trainer_config),
         callbacks=callbacks,

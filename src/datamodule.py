@@ -51,6 +51,7 @@ class EmbryoDataModule(LightningDataModule):
         # TODO Can be type conflict.
         img_folder = str(self.data_path) +  '\\images'
         if stage == 'fit':
+            pass
 
 
 
