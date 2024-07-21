@@ -20,7 +20,7 @@ from src.serialization import load_object
 
 
 class EmbryoLightningModule(LightningModule):
-    def __init__(self, classes: Tuple[str, ...], cfg: ModuleConfig):
+    def __init__(self, cfg: ModuleConfig):
         super().__init__()
         self.cfg = cfg
         self._train_loss = MeanMetric()

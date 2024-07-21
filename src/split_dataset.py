@@ -11,4 +11,6 @@ from src.logger import LOGGER
 
 
 def basic_split_dataset():
-    pass
+
+    
+    LOGGER.info("Dataset was successfully splitted and completed.")

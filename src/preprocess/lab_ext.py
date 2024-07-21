@@ -121,7 +121,7 @@ class LoadData:
         x = 2
         result = Tools.concat_two_tensors(regression_tensor, classification_tensor)
         result = Tools.concat_two_tensors(result, holes_tensor)
-        torch.save(result, str(PROJECT_ROOT) + "\\dataset\\labels\\torch_type\\torch_labels")
+        torch.save(result, str(PROJECT_ROOT) + "\\dataset\\torched\\torch_labels")
 
     @staticmethod
     def extract_images(directory_in_str):
@@ -132,7 +132,7 @@ class LoadData:
             filename_torch = directory_in_str + str(os.fsencode(file))[2:-1]
             img = torchvision.io.read_image(filename_torch)
             dir_of_images[raw_filename] = img
-        torch.save(dir_of_images, str(PROJECT_ROOT) + "dataset\\labels\\torch_type\\first_pack")
+        torch.save(dir_of_images, str(PROJECT_ROOT) + "dataset\\labels\\torched\\torched_images")
 
     @staticmethod
     def get_from_choice(choices: List) -> List:
