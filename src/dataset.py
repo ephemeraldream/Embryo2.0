@@ -13,7 +13,7 @@ from src.transform import get_basic_transform
 
 
 class EmbryoDataset(Dataset):
-    def __int__(
+    def __init__(
             self,
             images_dict: Dict,
             labels_tensor: Tensor,
@@ -34,6 +34,7 @@ class EmbryoDataset(Dataset):
         ops = albu.Compose([ToTensorV2()])
         img_id = self.images_ids[idx]
         image = self.image_dict[str(img_id)] / 255
+        # TODO : Куда-то делись ресайзы.
         image = ops((albu.Resize(ToPILImage()(image))))
         cls_label = self.labels_tensor[:25, 4:-1, idx]
         reg_label = self.labels_tensor[:25, :4, idx]

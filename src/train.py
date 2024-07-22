@@ -10,14 +10,14 @@ from src.config import ExperimentConfig
 from src.constants import PROJECT_ROOT
 from src.datamodule import EmbryoDataModule
 from src.lightning_module import EmbryoLightningModule
-
+from src.callbacks.experiment_tracking import ClearMLTracking
 
 def train(cfg:ExperimentConfig) -> None:
     pytorch_lightning.seed_everything(0)
     datamodule = EmbryoDataModule(cfg=cfg.data_config)
 
     callbacks = [
-
+        ClearMLTracking(cfg),
         LearningRateMonitor(logging_interval='step'),
         ModelCheckpoint(save_top_k=3, monitor='valid_f1', mode='max',every_n_epochs=1)
     ]

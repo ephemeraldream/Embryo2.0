@@ -1,5 +1,5 @@
 project_name: EmbryoVision2.0
-experiment_name: First_One
+experiment_name: object_detection
 track_in_clearml: true
 trainer_config:
   min_epochs: 7

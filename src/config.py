@@ -39,7 +39,6 @@ class TrainerConfig(_BaseValidatedConfig):
     min_epochs: int = 5  # prevents early stopping
     max_epochs: int = 13
 
-    # perform a validation loop every N training epochs
     check_val_every_n_epoch: int = 2
 
     log_every_n_steps: int = 50
