@@ -1,17 +1,17 @@
 import os
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+import gdown
+from typing import Dict, Optional
 
 import torch
-from dvc.repo import Repo
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, RandomSampler, Subset, random_split
-import torchvision
+
 from src.config import DataConfig
 from src.constants import PROJECT_ROOT
 from src.dataset import EmbryoDataset
+
 # from src.dataset_splitter import read_df, split_and_save_datasets
-from src.logger import LOGGER
 
 # from src.transform import get_train_transforms, get_valid_transforms
 
@@ -23,7 +23,7 @@ DEFAULT_DATA_PATH = PROJECT_ROOT / 'dataset'
 class EmbryoDataModule(LightningDataModule):
     def __init__(
             self,
-            cfg: DataConfig
+            cfg: DataConfig,
     ) -> None:
         super().__init__()
         self.cfg = cfg
@@ -51,16 +51,20 @@ class EmbryoDataModule(LightningDataModule):
 
     def setup(self, stage: str) -> None:
         # TODO Can be type conflict.
-        img_folder = str(self.data_path) + '\\images'
-        labels = torch.load(str(DEFAULT_DATA_PATH) + "\\torched\\torched_labels")
-        images = torch.load(str(DEFAULT_DATA_PATH) + "\\torched\\torched_images")
+        str(self.data_path) + '\\images'
+        gdown.download('https://drive.google.com/uc?id=1HQXqQND5NuP97rkuZujM8FwY4kEIxAEB', 'labels', quiet=False)
+        gdown.download('https://drive.google.com/uc?id=10jGdYGwqowfirF9nI0XTKM4TmKPqxotc', 'images', quiet=False)
+
+        # Загрузка данных в переменные
+        labels = torch.load('labels')
+        images = torch.load('images')
 
         dataset = EmbryoDataset(images, labels)
         shuffled_dataset = Subset(dataset, torch.randperm(len(dataset)).tolist())
         train_length = int(0.8 * len(dataset))
         train, test = random_split(
             shuffled_dataset,
-            [train_length, len(dataset) - train_length]
+            [train_length, len(dataset) - train_length],
         )
 
         if stage == 'fit':
@@ -69,7 +73,7 @@ class EmbryoDataModule(LightningDataModule):
 
             self.data_train, self.data_val = random_split(
                 train,
-                [shorter_length, val_length]
+                [shorter_length, val_length],
             )
 
 

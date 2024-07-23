@@ -1,15 +1,14 @@
 import json
 import os
-import re
-from typing import Union, Any, List
-from src.constants import PROJECT_ROOT
+from itertools import chain, islice, tee
+from typing import List
+
 import torch
 import torchvision
-import os
-import json
-from itertools import tee, islice, chain
 from tools import Tools
-from typing import Any, List, Union
+
+from src.constants import PROJECT_ROOT
+
 
 def ellipse_to_bbox(x, y, radiusX, radiusY, image_width, image_height):
     x_min = max(0, (x - radiusX) * image_width / 100)
@@ -28,11 +27,11 @@ class LoadData:
         nexts = chain(islice(nexts, 1, None), [None])
         return zip(prevs, items, nexts)
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @staticmethod
-    def extract_labels():
+    def extract_labels() -> None:
         holes_tensor = None
         regression_tensor = None
         classification_tensor = None
@@ -73,7 +72,7 @@ class LoadData:
                         cls_tensor_to_fill[25, :] = cls_idx
                         hole_tensor_to_fill[25, :] = hole_idx
 
-                        for previous, item, next in LoadData.previous_and_next(data[i]['annotations'][0]['result']):
+                        for _previous, item, next in LoadData.previous_and_next(data[i]['annotations'][0]['result']):
                             if next is None:
                                 choices = item['value'].get('choices', [])
                                 if "U" in choices:
@@ -118,15 +117,14 @@ class LoadData:
             else:
                 continue
 
-        x = 2
         result = Tools.concat_two_tensors(regression_tensor, classification_tensor)
         result = Tools.concat_two_tensors(result, holes_tensor)
         torch.save(result, str(PROJECT_ROOT) + "\\dataset\\torched\\torched_labels")
 
     @staticmethod
-    def extract_images(directory_in_str):
+    def extract_images(directory_in_str) -> None:
         directory = os.fsencode(directory_in_str)
-        dir_of_images = dict()
+        dir_of_images = {}
         for file in os.listdir(directory):
             raw_filename = str(os.fsdecode(file))[:-11]
             filename_torch = directory_in_str + str(os.fsencode(file))[2:-1]
@@ -147,7 +145,7 @@ class LoadData:
         return cls_to_add
 
 
-def main():
+def main() -> None:
     load = LoadData
     load.extract_labels()
     load.extract_images(str(PROJECT_ROOT) + "\\dataset\\images\\")

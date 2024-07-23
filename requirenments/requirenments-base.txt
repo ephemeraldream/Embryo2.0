@@ -20,3 +20,4 @@ gdown>=4.7.1
 pre-commit>=3.2.1
 pytest>=7.4.3
 ultralytics==8.2.60
+gdown==5.2.0

@@ -1,24 +1,17 @@
 from typing import Any, Dict, List, Tuple
 
-import torch
-import torch.nn.functional as func
 import timm
+import torch
 from pytorch_lightning import LightningModule
-from torch import Tensor
+from torch import Tensor, nn
 from torch.nn import functional as F
-import torch.nn as nn
-from torchmetrics import MeanMetric
-from torchmetrics import MetricCollection
 from torch.nn.functional import one_hot
-
-
+from torchmetrics import MeanMetric
 
 from src.config import ModuleConfig
 from src.metrics import get_classification_metrics, get_regression_metrics
 from src.schedulers import get_cosine_schedule_with_warmup
-from src.preprocess.tools import Tools
 from src.serialization import load_object
-
 
 
 class EmbryoLightningModule(LightningModule):
@@ -58,18 +51,18 @@ class EmbryoLightningModule(LightningModule):
         self.reg_head = torch.nn.Sequential(
             torch.nn.Linear(self.model.num_features, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(512,100)
+            torch.nn.Linear(512,100),
         )
         self.cls_head = torch.nn.Sequential(
             torch.nn.Linear(self.model.num_features, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(512, 125)
+            torch.nn.Linear(512, 125),
         )
         self.hole_head = torch.nn.Sequential(
             torch.nn.Linear(self.model.num_features, 512),
             torch.nn.ReLU(),
             torch.nn.Linear(512, 1),
-            torch.nn.Sigmoid()
+            torch.nn.Sigmoid(),
         )
 
         self.save_hyperparameters()
@@ -100,7 +93,6 @@ class EmbryoLightningModule(LightningModule):
 
         self._train_loss(loss)
         self.log('step_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        print(loss)
         return {'loss': loss, 'reg_pred': reg_pred, 'cls_pred': cls_pred, 'hole_pred': hole_pred}
 
     def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
@@ -192,7 +184,7 @@ class EmbryoLightningModule(LightningModule):
             },
         }
 
-    def modify_first_conv_layer(self):
+    def modify_first_conv_layer(self) -> None:
         original_conv = self.model.conv_stem
         new_conv = nn.Conv2d(
             in_channels=1,
@@ -200,7 +192,7 @@ class EmbryoLightningModule(LightningModule):
             kernel_size=(3,3),
             stride=(2,2),
             padding=original_conv.padding,
-            bias=original_conv.bias is not None
+            bias=original_conv.bias is not None,
         )
 
         with torch.no_grad():

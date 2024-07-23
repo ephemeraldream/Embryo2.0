@@ -4,13 +4,14 @@ import pytorch_lightning
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-# TODO src.callbacks.debug
+from src.callbacks.experiment_tracking import ClearMLTracking
 
+# TODO src.callbacks.debug
 from src.config import ExperimentConfig
 from src.constants import PROJECT_ROOT
 from src.datamodule import EmbryoDataModule
 from src.lightning_module import EmbryoLightningModule
-from src.callbacks.experiment_tracking import ClearMLTracking
+
 
 def train(cfg:ExperimentConfig) -> None:
     pytorch_lightning.seed_everything(0)
@@ -19,7 +20,7 @@ def train(cfg:ExperimentConfig) -> None:
     callbacks = [
         ClearMLTracking(cfg),
         LearningRateMonitor(logging_interval='step'),
-        ModelCheckpoint(save_top_k=3, monitor='valid_f1', mode='max',every_n_epochs=1)
+        ModelCheckpoint(save_top_k=3, monitor='valid_f1', mode='max',every_n_epochs=1),
     ]
     model = EmbryoLightningModule(cfg=cfg.module_config)
     # TODO : Something is wrong with callbacks

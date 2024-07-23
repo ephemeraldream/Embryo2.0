@@ -1,7 +1,7 @@
 --find-links https://download.pytorch.org/whl/torch_stable.html
 
--r requirements-base.txt
-
-torch==2.0.0+cu117
-torchvision>=0.15.0+cu117
+#-r requirements-base.txt
+#torch @ https://download.pytorch.org/whl/cu117_pypi_cudnn/torch-2.0.0%2Bcu117.with.pypi.cudnn-cp310-cp310-linux_x86_64.whl
+#torch==2.0.0+cu117
+#torchvision>=0.15.0+cu117
 

@@ -1,6 +1,10 @@
 from typing import Any
 
-from torchmetrics import F1Score, MetricCollection, Precision, Recall, MeanSquaredError, AUROC, Accuracy
+from torchmetrics import (
+    Accuracy,
+    MeanSquaredError,
+    MetricCollection,
+)
 
 
 def get_classification_metrics(**kwargs: Any) -> MetricCollection:
@@ -18,6 +22,6 @@ def get_classification_metrics(**kwargs: Any) -> MetricCollection:
 def get_regression_metrics(**kwargs: Any) -> MetricCollection:
     return MetricCollection(
         {
-            'MSE': MeanSquaredError(**kwargs)
+            'MSE': MeanSquaredError(**kwargs),
         },
     )

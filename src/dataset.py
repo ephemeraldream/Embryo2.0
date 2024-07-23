@@ -1,15 +1,9 @@
-from pathlib import Path
-from typing import Optional, Tuple, Dict
+from typing import Dict, Optional
 
 import albumentations as albu
 from albumentations.pytorch import ToTensorV2
-from torchvision.transforms import ToPILImage
-import jpeg4py as jpeg
-import numpy as np
-import pandas as pd
 from torch import Tensor
 from torch.utils.data import Dataset
-from src.transform import get_basic_transform
 
 
 class EmbryoDataset(Dataset):
@@ -17,7 +11,7 @@ class EmbryoDataset(Dataset):
             self,
             images_dict: Dict,
             labels_tensor: Tensor,
-            transforms: Optional[albu.Compose] = None
+            transforms: Optional[albu.Compose] = None,
     ):
         self.image_dict = images_dict
         self.transforms = transforms
@@ -27,7 +21,7 @@ class EmbryoDataset(Dataset):
 
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.images_ids)
 
 
