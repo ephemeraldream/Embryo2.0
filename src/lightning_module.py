@@ -6,9 +6,11 @@ import timm
 from pytorch_lightning import LightningModule
 from torch import Tensor
 from torch.nn import functional as F
+import torch.nn as nn
 from torchmetrics import MeanMetric
 from torchmetrics import MetricCollection
 from torch.nn.functional import one_hot
+
 
 
 from src.config import ModuleConfig
@@ -27,7 +29,8 @@ class EmbryoLightningModule(LightningModule):
         self._valid_loss = MeanMetric()
 
         cls_metrics = get_classification_metrics(
-            num_classes=len(classes))
+            task = 'multiclass',
+            num_classes=cfg.num_classes)
 
         reg_metrics = get_regression_metrics().clone()
 
@@ -40,12 +43,16 @@ class EmbryoLightningModule(LightningModule):
 
 
         self.model = timm.create_model(
-            num_classes=len(classes),
+            num_classes=cfg.num_classes,
             model_name=cfg.model_name,
             pretrained=cfg.pretrained,
             **cfg.model_kwargs,
 
         )
+        # TODO : Изменение входных каналов на 1.
+        self.modify_first_conv_layer()
+
+
         self.model.reset_classifier(0)
 
         self.reg_head = torch.nn.Sequential(
@@ -68,7 +75,10 @@ class EmbryoLightningModule(LightningModule):
         self.save_hyperparameters()
 
     def forward(self, images: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
+        images = torch.squeeze(images, dim=2)
+        assert images.shape == (32,1,224,224)
         features = self.model(images)
+
 
         reg = self.reg_head(features).view(-1, 25, 4)
         cls = self.cls_head(features).view(-1, 25, 5)
@@ -76,8 +86,10 @@ class EmbryoLightningModule(LightningModule):
 
         return reg, cls, hole
 
-    def training_step(self, batch: List[torch.Tensor]) -> Dict[str, Tensor, Tensor, Tensor]:
+    def training_step(self, batch: List[torch.Tensor]) -> Dict[str, Any]:
         images, targets = batch
+        images = torch.squeeze(images, dim=2)
+        assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
@@ -88,6 +100,7 @@ class EmbryoLightningModule(LightningModule):
 
         self._train_loss(loss)
         self.log('step_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        print(loss)
         return {'loss': loss, 'reg_pred': reg_pred, 'cls_pred': cls_pred, 'hole_pred': hole_pred}
 
     def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
@@ -178,3 +191,21 @@ class EmbryoLightningModule(LightningModule):
                 'frequency': 1,
             },
         }
+
+    def modify_first_conv_layer(self):
+        original_conv = self.model.conv_stem
+        new_conv = nn.Conv2d(
+            in_channels=1,
+            out_channels=original_conv.out_channels,
+            kernel_size=(3,3),
+            stride=(2,2),
+            padding=original_conv.padding,
+            bias=original_conv.bias is not None
+        )
+
+        with torch.no_grad():
+            new_conv.weight = nn.Parameter(torch.mean(original_conv.weight, dim=1, keepdim=True))
+            if original_conv.bias is not None:
+                new_conv.bias = original_conv.bias
+
+        self.model.conv_stem = new_conv

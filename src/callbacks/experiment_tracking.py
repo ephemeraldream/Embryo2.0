@@ -23,7 +23,7 @@ class ClearMLTracking(Callback):
         super().__init__()
         self.cfg = cfg
         self.label_enumeration = label_enumeration
-        self.output_model = Optional[OutputModel] = None
+        self.output_model:Optional[OutputModel] = None
 
     def on_fit_start(self, trainer: Trainer, pl_module: LightningModule) -> None:
         self._setup_task()
@@ -63,6 +63,6 @@ def select_checkpoint_for_export(trainer: Trainer) -> str:
     checkpoint_path = os.path.join(trainer.log_dir, 'checkpoint-from-trainer.pth')
     trainer.save_checkpoint(checkpoint_path)
     LOGGER.info('Saved checkpoint: %s.', checkpoint_path)
-    return checkpoint_pat
+    return checkpoint_path
 
 

@@ -2,7 +2,7 @@ import os
 
 import pytorch_lightning
 from pytorch_lightning import Trainer
-from lightning.pytorch.callbacks import LearningRateMonitor, ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
 # TODO src.callbacks.debug
 

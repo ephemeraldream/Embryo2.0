@@ -18,7 +18,7 @@ data_config:
   - 224
   batch_size: 32
   train_size: 0.8
-  num_workers: 10
+  num_workers: 8
   pin_memory: true
   num_samples: 11000
 module_config:

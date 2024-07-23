@@ -21,8 +21,9 @@ class EmbryoDataset(Dataset):
     ):
         self.image_dict = images_dict
         self.transforms = transforms
-        self.images_ids = labels_tensor[25,:,0].long().tolist()
+        self.images_ids = labels_tensor[25,0,:].long().tolist()
         self.labels_tensor = labels_tensor
+        self.transform = transforms
 
 
 
@@ -31,16 +32,20 @@ class EmbryoDataset(Dataset):
 
 
     def __getitem__(self, idx):
-        ops = albu.Compose([ToTensorV2()])
+        transform = albu.Compose([albu.Resize(height=224, width=224), ToTensorV2()])
         img_id = self.images_ids[idx]
         image = self.image_dict[str(img_id)] / 255
-        # TODO : Куда-то делись ресайзы.
-        image = ops((albu.Resize(ToPILImage()(image))))
+
+
+
+        image = image.squeeze().numpy()
+        transformed = transform(image=image)
+        image = transformed['image'].unsqueeze(0)
         cls_label = self.labels_tensor[:25, 4:-1, idx]
         reg_label = self.labels_tensor[:25, :4, idx]
-        reg_label[:25, 0:2, idx] = reg_label[:25, 2:4, idx] / 384
-        reg_label[:25, 2:4, idx] = reg_label[:25, 2:4, idx] / 275
+        reg_label = reg_label / 100
         hole_label = self.labels_tensor[0,-1, idx]
+
 
 
         return image, (reg_label, cls_label, hole_label)

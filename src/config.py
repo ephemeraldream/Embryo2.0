@@ -25,8 +25,11 @@ class SerializableObject(_BaseValidatedConfig):
 class ModuleConfig(_BaseValidatedConfig):
     model_name: str = 'efficientnet_b5'
     pretrained: bool = True
+    num_classes: int = 5
+    protected_namespaces:Tuple = ()
     model_kwargs: Dict[str, Any] = Field(default_factory=dict)
     binarization_threshold: float = 0.5
+
 
     optimizer: SerializableObject = SerializableObject(
         target_class='torch.optim.AdamW',
@@ -59,6 +62,9 @@ class ExperimentConfig(_BaseValidatedConfig):
     trainer_config: TrainerConfig = Field(default=TrainerConfig())
     data_config: DataConfig = Field(default=DataConfig())
     module_config: ModuleConfig = Field(default=ModuleConfig())
+
+    class Config:
+        protected_namespaces = ()
 
     @classmethod
     def from_yaml(cls, path: Union[str, Path]) -> 'ExperimentConfig':

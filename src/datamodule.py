@@ -57,17 +57,19 @@ class EmbryoDataModule(LightningDataModule):
 
         dataset = EmbryoDataset(images, labels)
         shuffled_dataset = Subset(dataset, torch.randperm(len(dataset)).tolist())
-        train_length = 0.8 * len(dataset)
+        train_length = int(0.8 * len(dataset))
         train, test = random_split(
             shuffled_dataset,
             [train_length, len(dataset) - train_length]
         )
 
         if stage == 'fit':
-            train_length = 0.8 * train_length
+            shorter_length = int(0.8 * train_length)
+            val_length = train_length - shorter_length
+
             self.data_train, self.data_val = random_split(
-                shuffled_dataset,
-                [train_length, len(train) - train_length]
+                train,
+                [shorter_length, val_length]
             )
 
 
