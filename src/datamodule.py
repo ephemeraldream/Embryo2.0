@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 import gdown
 from typing import Dict, Optional
-
 import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, RandomSampler, Subset, random_split
@@ -51,13 +50,33 @@ class EmbryoDataModule(LightningDataModule):
 
     def setup(self, stage: str) -> None:
         # TODO Can be type conflict.
-        str(self.data_path) + '\\images'
-        gdown.download('https://drive.google.com/uc?id=1HQXqQND5NuP97rkuZujM8FwY4kEIxAEB', 'labels', quiet=False)
-        gdown.download('https://drive.google.com/uc?id=10jGdYGwqowfirF9nI0XTKM4TmKPqxotc', 'images', quiet=False)
+        dataset_path = os.path.join(PROJECT_ROOT, "dataset", "torched")
+        backup_path = os.path.join(dataset_path, "backup")
+        labels_path = os.path.join(dataset_path, "labels")  # Замените на правильный формат
+        images_path = os.path.join(dataset_path, "images")  # Замените на правильный формат
 
-        # Загрузка данных в переменные
-        labels = torch.load('labels')
-        images = torch.load('images')
+        # Проверяем существование папок и создаем их при необходимости
+        os.makedirs(dataset_path, exist_ok=True)
+        os.makedirs(backup_path, exist_ok=True)
+
+        # Функция для загрузки файла, если он не существует
+        labels_path = os.path.join(dataset_path, "labels.pt")
+        images_path = os.path.join(dataset_path, "images.pt")
+
+        # Функция для скачивания файла, если он не существует
+        def download_if_not_exists(url, path):
+            if not os.path.exists(path):
+                os.makedirs(dataset_path, exist_ok=True)
+                gdown.download(url, path, quiet=False)
+
+        # Проверяем и скачиваем файлы при необходимости
+        download_if_not_exists('https://drive.google.com/uc?id=1HQXqQND5NuP97rkuZujM8FwY4kEIxAEB', labels_path)
+        download_if_not_exists('https://drive.google.com/uc?id=10jGdYGwqowfirF9nI0XTKM4TmKPqxotc', images_path)
+
+        # Загружаем данные с помощью torch.load
+        labels = torch.load(labels_path)
+        images = torch.load(images_path)
+        # Загружаем данные в переменные
 
         dataset = EmbryoDataset(images, labels)
         shuffled_dataset = Subset(dataset, torch.randperm(len(dataset)).tolist())

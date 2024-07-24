@@ -83,6 +83,7 @@ class EmbryoLightningModule(LightningModule):
         images, targets = batch
         images = torch.squeeze(images, dim=2)
         assert images.shape == (32,1,224,224)
+
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
@@ -91,12 +92,17 @@ class EmbryoLightningModule(LightningModule):
 
         loss = reg_loss + cls_loss + hole_loss
 
+        _, max_index = torch.max(cls_pred,2)
+        one_hot_preds = one_hot(max_index, num_classes=cls_pred.shape[2])
         self._train_loss(loss)
         self.log('step_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return {'loss': loss, 'reg_pred': reg_pred, 'cls_pred': cls_pred, 'hole_pred': hole_pred}
 
+
     def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         images, targets = batch
+        images = torch.squeeze(images, dim=2)
+        assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
@@ -116,6 +122,8 @@ class EmbryoLightningModule(LightningModule):
 
     def test_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         images, targets = batch
+        images = torch.squeeze(images, dim=2)
+        assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
