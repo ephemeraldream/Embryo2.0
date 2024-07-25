@@ -102,7 +102,7 @@ class EmbryoLightningModule(LightningModule):
     def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         images, targets = batch
         images = torch.squeeze(images, dim=2)
-        assert images.shape == (32,1,224,224)
+        #assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
@@ -123,18 +123,11 @@ class EmbryoLightningModule(LightningModule):
     def test_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
         images, targets = batch
         images = torch.squeeze(images, dim=2)
-        assert images.shape == (32,1,224,224)
+        #assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
-        reg_loss = F.mse_loss(reg_pred, targets[0])
-        cls_loss = F.cross_entropy(cls_pred, targets[1])
-        hole_loss = F.binary_cross_entropy(hole_pred, targets[2].float())
-        loss = reg_loss + cls_loss + hole_loss
-        self._valid_loss(loss)
-        # TODO : Тоже размерность.
         _, max_index = torch.max(cls_pred,2)
         one_hot_preds = one_hot(max_index, num_classes=cls_pred.shape[2])
-
         self._test_cls_metrics(one_hot_preds, targets[1])
         self._test_reg_metrics(reg_pred, targets[0])
         return reg_pred, one_hot_preds, torch.where(hole_pred > 0.5, torch.tensor(1), torch.tensor(0))
@@ -168,8 +161,8 @@ class EmbryoLightningModule(LightningModule):
     def on_test_epoch_end(self) -> None:
         self.log_dict(self._test_cls_metrics.compute(), prog_bar=True, on_epoch=True)
         self.log_dict(self._test_reg_metrics.compute(), prog_bar=True, on_epoch=True)
-        self._test_cls_metrics.reset()
         self._test_reg_metrics.reset()
+        self._test_cls_metrics.reset()
 
     def configure_optimizers(self) -> Dict[str, Any]:
         optimizer = load_object(

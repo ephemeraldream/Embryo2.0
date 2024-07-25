@@ -34,6 +34,17 @@ class ClearMLTracking(Callback):
             raise ValueError(msg)
         self.output_model.update_weights(weights_filename=final_checkpoint, auto_delete_file=True)
 
+    def on_validation_end(self, trainer: "Trainer", pl_module: "LightningModule") -> None:
+        checkpoint: Optional[ModelCheckpoint] = trainer.checkpoint_callback
+        if checkpoint is None:
+            LOGGER.info("THERE IS NO CHECKPOINT YET.")
+        else:
+            cp_path = checkpoint.last_model_path
+            checkpoint_path = os.path.join(trainer.log_dir, 'checkpoint-from-trainer.pth')
+            trainer.save_checkpoint(checkpoint_path)
+            LOGGER.info('Saved Validation checkpoint: %s.', checkpoint_path)
+
+
     def _setup_task(self) -> None:
         Task.force_requirements_env_freeze()
         self.task = Task.init(
@@ -49,19 +60,33 @@ class ClearMLTracking(Callback):
 
 
 
-def select_checkpoint_for_export(trainer: Trainer) -> str:
+def select_checkpoint_for_export(trainer: Trainer, on_test=True) -> str:
     checkpoint_cb: Optional[ModelCheckpoint] = trainer.checkpoint_callback
-    if checkpoint_cb is not None:
-        checkpoint_path = checkpoint_cb.best_model_path
-        if os.path.isfile(checkpoint_path):
-            LOGGER.info('Selected best checkpoint: %s', checkpoint_path)
+    if on_test:
+        if checkpoint_cb is not None:
+            checkpoint_path = checkpoint_cb.best_model_path
+            if os.path.isfile(checkpoint_path):
+                LOGGER.info('Selected best checkpoint: %s', checkpoint_path)
+                return checkpoint_path
+            else:
+                LOGGER.warning("Couldn't find the best checkpoint, probably callback haven't been called yet.")
+            checkpoint_path = os.path.join(trainer.log_dir, 'checkpoint-from-trainer.pth')
+            trainer.save_checkpoint(checkpoint_path)
+            LOGGER.info('Saved checkpoint: %s.', checkpoint_path)
             return checkpoint_path
-        else:
-            LOGGER.warning("Couldn't find the best checkpoint, probably callback haven't been called yet.")
+    else:
+        if checkpoint_cb is not None:
+            checkpoint_path = checkpoint_cb.last_model_path
+            if os.path.isfile(checkpoint_path):
+                LOGGER.info('Selected of last valid checkpoint: %s', checkpoint_path)
+                return checkpoint_path
+            else:
+                LOGGER.warning("Couldn't find the best checkpoint, probably callback haven't been called yet.")
 
-    checkpoint_path = os.path.join(trainer.log_dir, 'checkpoint-from-trainer.pth')
-    trainer.save_checkpoint(checkpoint_path)
-    LOGGER.info('Saved checkpoint: %s.', checkpoint_path)
-    return checkpoint_path
+
+        checkpoint_path = os.path.join(trainer.log_dir, 'checkpoint-from-trainer.pth')
+        trainer.save_checkpoint(checkpoint_path)
+        LOGGER.info('Saved checkpoint: %s.', checkpoint_path)
+        return checkpoint_path
 
 
