@@ -1,16 +1,27 @@
+#Неведомая хуййня
 import os
 
 import pytorch_lightning
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 
-from src.callbacks.experiment_tracking import ClearMLTracking
+# from src.callbacks.experiment_tracking import ClearMLTracking
 
 # TODO src.callbacks.debug
-from src.config import ExperimentConfig
-from src.constants import PROJECT_ROOT
-from src.datamodule import EmbryoDataModule
-from src.lightning_module import EmbryoLightningModule
+from config import ExperimentConfig
+from constants import PROJECT_ROOT
+from datamodule import EmbryoDataModule
+from lightning_module import EmbryoLightningModule
+from datetime import datetime
+
+model_checkpoint = ModelCheckpoint(
+    dirpath= str(PROJECT_ROOT) + "/dataset/LG/version",
+    filename="model-{epoch:02d}-{val_loss:.2f}V3REG",
+    save_top_k=1,
+    save_weights_only=False,
+    mode='min',
+    monitor='val_loss',
+    verbose=True)
 
 
 def train(cfg:ExperimentConfig) -> None:
@@ -18,9 +29,10 @@ def train(cfg:ExperimentConfig) -> None:
     datamodule = EmbryoDataModule(cfg=cfg.data_config)
 
     callbacks = [
-        ClearMLTracking(cfg),
+        # ClearMLTracking(cfg),
+        model_checkpoint,
         LearningRateMonitor(logging_interval='step'),
-        ModelCheckpoint(save_top_k=3, monitor='valid_f1', mode='max',every_n_epochs=1),
+        ModelCheckpoint(save_top_k=3, monitor='val_reg_MSE', mode='max',every_n_epochs=1),
     ]
     model = EmbryoLightningModule(cfg=cfg.module_config)
     # TODO : Something is wrong with callbacks

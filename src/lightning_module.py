@@ -7,14 +7,18 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 from torch.nn.functional import one_hot
 from torchmetrics import MeanMetric
+from datetime import datetime
+from pytorch_lightning.callbacks import ModelCheckpoint
+from constants import PROJECT_ROOT
 
-from src.config import ModuleConfig
-from src.metrics import get_classification_metrics, get_regression_metrics
-from src.schedulers import get_cosine_schedule_with_warmup
-from src.serialization import load_object
+from config import ModuleConfig
+from metrics import get_classification_metrics, get_regression_metrics
+from schedulers import get_cosine_schedule_with_warmup
+from serialization import load_object
 
 
 class EmbryoLightningModule(LightningModule):
+
     def __init__(self, cfg: ModuleConfig):
         super().__init__()
         self.cfg = cfg
@@ -26,6 +30,8 @@ class EmbryoLightningModule(LightningModule):
             num_classes=cfg.num_classes)
 
         reg_metrics = get_regression_metrics().clone()
+
+        torch.cuda.empty_cache()
 
         self._val_cls_metrics = cls_metrics.clone(prefix='val_cls_')
         self._test_cls_metrics = cls_metrics.clone(prefix='test_cls_')
@@ -69,7 +75,7 @@ class EmbryoLightningModule(LightningModule):
 
     def forward(self, images: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
         images = torch.squeeze(images, dim=2)
-        assert images.shape == (32,1,224,224)
+        # assert images.shape == (32,1,224,224)
         features = self.model(images)
 
 
@@ -82,7 +88,7 @@ class EmbryoLightningModule(LightningModule):
     def training_step(self, batch: List[torch.Tensor]) -> Dict[str, Any]:
         images, targets = batch
         images = torch.squeeze(images, dim=2)
-        assert images.shape == (32,1,224,224)
+        #assert images.shape == (32,1,224,224)
 
         reg_pred, cls_pred, hole_pred = self(images)
 
@@ -100,6 +106,7 @@ class EmbryoLightningModule(LightningModule):
 
 
     def validation_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
+        device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
         images, targets = batch
         images = torch.squeeze(images, dim=2)
         #assert images.shape == (32,1,224,224)
@@ -114,13 +121,16 @@ class EmbryoLightningModule(LightningModule):
         # TODO : Точно будут ошибки. Не забыть поменять размерность.
         _, max_index = torch.max(cls_pred,2)
         one_hot_preds = one_hot(max_index, num_classes=cls_pred.shape[2])
+        self.log('val_loss', self._valid_loss, on_epoch=True, prog_bar=True)
 
         self._val_cls_metrics(one_hot_preds, targets[1])
         self._val_reg_metrics(reg_pred, targets[0])
-        return reg_pred, one_hot_preds, torch.where(hole_pred > 0.5, torch.tensor(1), torch.tensor(0))
+        return reg_pred, one_hot_preds, torch.where(hole_pred > 0.5, torch.tensor(1).to(device), torch.tensor(0).to(device))
+
 
 
     def test_step(self, batch: List[torch.Tensor], batch_idx: int) -> Tuple[Tensor, Tensor, Tensor]:
+        device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
         images, targets = batch
         images = torch.squeeze(images, dim=2)
         #assert images.shape == (32,1,224,224)
@@ -130,7 +140,7 @@ class EmbryoLightningModule(LightningModule):
         one_hot_preds = one_hot(max_index, num_classes=cls_pred.shape[2])
         self._test_cls_metrics(one_hot_preds, targets[1])
         self._test_reg_metrics(reg_pred, targets[0])
-        return reg_pred, one_hot_preds, torch.where(hole_pred > 0.5, torch.tensor(1), torch.tensor(0))
+        return reg_pred, one_hot_preds, torch.where(hole_pred > 0.5, torch.tensor(1).to(device), torch.tensor(0).to(device))
 
 
 
@@ -157,6 +167,7 @@ class EmbryoLightningModule(LightningModule):
         self.log_dict(self._val_cls_metrics.compute(), prog_bar=True, on_epoch=True)
         self.log_dict(self._val_reg_metrics.compute(), prog_bar=True, on_epoch=True)
         self._val_cls_metrics.reset()
+
 
     def on_test_epoch_end(self) -> None:
         self.log_dict(self._test_cls_metrics.compute(), prog_bar=True, on_epoch=True)

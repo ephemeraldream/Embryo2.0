@@ -6,9 +6,9 @@ import torch
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, RandomSampler, Subset, random_split
 
-from src.config import DataConfig
-from src.constants import PROJECT_ROOT
-from src.dataset import EmbryoDataset
+from config import DataConfig
+from constants import PROJECT_ROOT
+from dataset import EmbryoDataset
 
 # from src.dataset_splitter import read_df, split_and_save_datasets
 

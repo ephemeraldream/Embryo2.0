@@ -1,7 +1,7 @@
 
 
 # Пока что ненужный совсем файл. Может быть потом добавить стратификацию.
-from src.logger import LOGGER
+from logger import LOGGER
 
 
 def basic_split_dataset() -> None:
