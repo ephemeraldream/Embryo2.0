@@ -109,7 +109,6 @@ class EmbryoLightningModule(LightningModule):
         device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
         images, targets = batch
         images = torch.squeeze(images, dim=2)
-        #assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         reg_loss = F.mse_loss(reg_pred, targets[0])
@@ -133,7 +132,6 @@ class EmbryoLightningModule(LightningModule):
         device = torch.device("cuda" if torch.cuda.is_available() else 'cpu')
         images, targets = batch
         images = torch.squeeze(images, dim=2)
-        #assert images.shape == (32,1,224,224)
         reg_pred, cls_pred, hole_pred = self(images)
 
         _, max_index = torch.max(cls_pred,2)
