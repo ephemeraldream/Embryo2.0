@@ -118,6 +118,7 @@ class EmbryoLightningModule(LightningModule):
         self._valid_loss(loss)
 
 
+
         # TODO : Точно будут ошибки. Не забыть поменять размерность.
         _, max_index = torch.max(cls_pred,2)
         one_hot_preds = one_hot(max_index, num_classes=cls_pred.shape[2])
