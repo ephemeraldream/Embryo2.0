@@ -16,7 +16,7 @@ from datetime import datetime
 
 model_checkpoint = ModelCheckpoint(
     dirpath= str(PROJECT_ROOT) + "/dataset/LG/version",
-    filename="model-{epoch:02d}-{val_loss:.2f}V3REG",
+    filename="EFFB6V8regNO_PRETRAINED_circles",
     save_top_k=1,
     save_weights_only=False,
     mode='min',

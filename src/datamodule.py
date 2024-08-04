@@ -52,28 +52,28 @@ class EmbryoDataModule(LightningDataModule):
         # TODO Can be type conflict.
         dataset_path = os.path.join(PROJECT_ROOT, "dataset", "torched")
         backup_path = os.path.join(dataset_path, "backup")
-        labels_path = os.path.join(dataset_path, "labels")  # Замените на правильный формат
+        labels_path = os.path.join(dataset_path, "torched_labels_circles")  # Замените на правильный формат
         images_path = os.path.join(dataset_path, "images")  # Замените на правильный формат
-
-        # Проверяем существование папок и создаем их при необходимости
-        os.makedirs(dataset_path, exist_ok=True)
-        os.makedirs(backup_path, exist_ok=True)
-
-        # Функция для загрузки файла, если он не существует
-        labels_path = os.path.join(dataset_path, "labels.pt")
-        images_path = os.path.join(dataset_path, "images.pt")
-
-        # Функция для скачивания файла, если он не существует
-        def download_if_not_exists(url, path):
-            if not os.path.exists(path):
-                os.makedirs(dataset_path, exist_ok=True)
-                gdown.download(url, path, quiet=False)
-
-        # Проверяем и скачиваем файлы при необходимости
-        download_if_not_exists('https://drive.google.com/uc?id=1HQXqQND5NuP97rkuZujM8FwY4kEIxAEB', labels_path)
-        download_if_not_exists('https://drive.google.com/uc?id=10jGdYGwqowfirF9nI0XTKM4TmKPqxotc', images_path)
-
-        # Загружаем данные с помощью torch.load
+        #
+        # # Проверяем существование папок и создаем их при необходимости
+        # os.makedirs(dataset_path, exist_ok=True)
+        # os.makedirs(backup_path, exist_ok=True)
+        #
+        # # Функция для загрузки файла, если он не существует
+        # labels_path = os.path.join(dataset_path, "labels.pt")
+        # images_path = os.path.join(dataset_path, "images.pt")
+        #
+        # # Функция для скачивания файла, если он не существует
+        # def download_if_not_exists(url, path):
+        #     if not os.path.exists(path):
+        #         os.makedirs(dataset_path, exist_ok=True)
+        #         gdown.download(url, path, quiet=False)
+        #
+        # # Проверяем и скачиваем файлы при необходимости
+        # download_if_not_exists('https://drive.google.com/uc?id=1HQXqQND5NuP97rkuZujM8FwY4kEIxAEB', labels_path)
+        # download_if_not_exists('https://drive.google.com/uc?id=10jGdYGwqowfirF9nI0XTKM4TmKPqxotc', images_path)
+        #
+        # # Загружаем данные с помощью torch.load
         labels = torch.load(labels_path)
         images = torch.load(images_path)
         # Загружаем данные в переменные
